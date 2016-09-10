@@ -1,7 +1,9 @@
 package com.clarifai.androidstarter;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -12,12 +14,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.clarifai.api.ClarifaiClient;
 import com.clarifai.api.RecognitionRequest;
 import com.clarifai.api.RecognitionResult;
 import com.clarifai.api.Tag;
 import com.clarifai.api.exception.ClarifaiException;
+import com.google.android.gms.vision.text.TextRecognizer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -126,6 +130,20 @@ public class RecognitionActivity extends Activity {
 
   /** Updates the UI by displaying tags for the given result. */
   private void updateUIForResult(RecognitionResult result) {
+    Context context = getApplicationContext();
+    TextRecognizer tr = new TextRecognizer.Builder(context).build();
+
+    if(!tr.isOperational()){
+      Log.w(TAG, "Detector dependencies not yet available");
+
+      IntentFilter lowStorageFilter = new IntentFilter(Intent.ACTION_DEVICE_STORAGE_LOW);
+      boolean hasLowStorage = registerReceiver(null, lowStorageFilter) != null;
+      if(hasLowStorage){
+        Toast.makeText(this, R.string.low_storage_error, Toast.LENGTH_LONG).show();
+        Log.w(TAG, getString(R.string.low_storage_error));
+      }
+    }
+
     if (result != null) {
       if (result.getStatusCode() == RecognitionResult.StatusCode.OK) {
         // Display the list of tags in the UI.
